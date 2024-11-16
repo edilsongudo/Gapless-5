@@ -1337,6 +1337,14 @@ function Gapless5(options = {}, deprecated = {}) { // eslint-disable-line no-unu
       return;
     }
 
+    const isCurrentTrack = index === this.playlist.trackNumber;
+    const wasPlayingCurrentTrack = isCurrentTrack && this.isPlaying();
+
+    // If it's the current track, pause playback
+    if (wasPlayingCurrentTrack) {
+      this.pause();
+    }
+
     // If removing a track before the current track, decrement trackNumber
     if (index < this.playlist.trackNumber) {
       this.playlist.trackNumber--;
@@ -1351,6 +1359,11 @@ function Gapless5(options = {}, deprecated = {}) { // eslint-disable-line no-unu
     this.playlist.sources.splice(index, 1);
     this.playlist.shuffledIndices = [];
     this.uiDirty = true;
+
+    // If we were playing and there are tracks remaining, play the next available track
+    if (wasPlaying && this.playlist.numTracks() > 0) {
+      this.play();
+    }
   };
 
   /**
