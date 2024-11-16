@@ -1332,8 +1332,8 @@ function Gapless5(options = {}, deprecated = {}) { // eslint-disable-line no-unu
    */
   this.removeTrack = (pointOrPath) => {
     const index = typeof pointOrPath === 'number' ? pointOrPath : this.findTrack(pointOrPath);
-    if (index < 0 || index >= this.playlist.numTracks()) {
-      log.warn(`Cannot remove missing track at index: ${index}`);
+    if (!isValidIndex(index)) {
+      log.error(`Cannot remove missing track at index: ${index}`);
       return;
     }
 
