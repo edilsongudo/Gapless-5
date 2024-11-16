@@ -331,7 +331,7 @@ declare class Gapless5Source {
     isPlayActive: (checkStarting: any) => boolean;
     getPosition: () => number;
     getLength: () => number;
-    play: (syncPosition: any) => void;
+    play: (syncPosition: any, skipCallback: any) => void;
     setPlaybackRate: (rate: any) => void;
     tick: (updateLoopState: any) => number;
     getSeekablePercent: () => number;

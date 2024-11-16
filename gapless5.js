@@ -1331,35 +1331,25 @@ function Gapless5(options = {}, deprecated = {}) { // eslint-disable-line no-unu
    * @param {number | string} pointOrPath - audio path or playlist index
    */
   this.removeTrack = (pointOrPath) => {
-    const point = this.playlist.indexFromTrack(pointOrPath);
-    if (!isValidIndex(point)) {
-      log.warn(`Cannot remove missing track: ${pointOrPath}`);
+    const index = typeof pointOrPath === 'number' ? pointOrPath : this.findTrack(pointOrPath);
+    if (index < 0 || index >= this.playlist.numTracks()) {
+      log.warn(`Cannot remove missing track at index: ${index}`);
       return;
     }
-    const deletedPlaying = point === this.playlist.trackNumber;
 
-    const { source: curSource } = this.playlist.getSourceIndexed(point);
-    if (!curSource) {
-      return;
+    // If removing a track before the current track, decrement trackNumber
+    if (index < this.playlist.trackNumber) {
+      this.playlist.trackNumber--;
     }
-    let wasPlaying = false;
-
-    if (curSource.state === Gapless5State.Loading) {
-      curSource.unload();
-    } else if (curSource.inPlayState(true)) {
-      wasPlaying = true;
-      curSource.stop();
+    // If removing the current track or a track after it, but trackNumber would exceed new length
+    else if (this.playlist.trackNumber >= this.playlist.numTracks() - 1) {
+      this.playlist.trackNumber = Math.max(0, this.playlist.numTracks() - 2);
     }
+    // Otherwise keep the same trackNumber
 
-    this.playlist.remove(point);
-
-    if (deletedPlaying) {
-      this.next(); // Don't stop after a delete
-      if (wasPlaying) {
-        this.play();
-      }
-    }
-
+    this.playlist.sources[index].unload();
+    this.playlist.sources.splice(index, 1);
+    this.playlist.shuffledIndices = [];
     this.uiDirty = true;
   };
 
