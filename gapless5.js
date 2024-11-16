@@ -180,14 +180,14 @@ function Gapless5Source(parentPlayer, parentLog, inAudioPath) {
     }
     gainNode.gain.value = this.getVolume();
 
-    if (queuedState === Gapless5State.Play && state === Gapless5State.Loading) {
-      this.setCrossfade(crossfadeIn, crossfadeOut); // re-clamp, now that endpos is reset
-      playAudioFile(true);
-    } else if ((audio !== null) && (queuedState === Gapless5State.None) && this.inPlayState(true)) {
-      log.debug(`Switching from HTML5 to WebAudio: ${this.audioPath}`);
-      setState(Gapless5State.Stop);
+    // Play immediately if queued or currently playing HTML5
+    if ((queuedState === Gapless5State.Play && state === Gapless5State.Loading) ||
+        ((audio !== null) && (queuedState === Gapless5State.None) && this.inPlayState(true))) {
+      this.setCrossfade(crossfadeIn, crossfadeOut);
+      setState(Gapless5State.Stop); // Ensure clean state
       this.play(true, true);
     }
+
     if (state === Gapless5State.Loading) {
       state = Gapless5State.Stop;
     }
@@ -355,8 +355,17 @@ function Gapless5Source(parentPlayer, parentLog, inAudioPath) {
     if (state === Gapless5State.Loading) {
       log.debug(`Loading ${this.audioPath}`);
       queuedState = Gapless5State.Play;
+      // Set a timeout to force play even if not fully loaded
+      if (!player.useHTML5Audio && player.useWebAudio) {
+        window.setTimeout(() => {
+          if (state === Gapless5State.Loading && queuedState === Gapless5State.Play) {
+            log.debug(`Forcing play of partially loaded track: ${this.audioPath}`);
+            playAudioFile(syncPosition, skipCallback);
+          }
+        }, 3000); // 3 second timeout
+      }
     } else {
-      playAudioFile(syncPosition, skipCallback); // play immediately
+      playAudioFile(syncPosition, skipCallback);
     }
   };
 
