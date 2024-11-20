@@ -1361,7 +1361,7 @@ function Gapless5(options = {}, deprecated = {}) { // eslint-disable-line no-unu
     this.uiDirty = true;
 
     // If we were playing and there are tracks remaining, play the next available track
-    if (wasPlaying && this.playlist.numTracks() > 0) {
+    if (wasPlayingCurrentTrack && this.playlist.numTracks() > 0) {
       this.play();
     }
   };
