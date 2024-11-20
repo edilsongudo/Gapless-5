@@ -153,7 +153,7 @@ describe('Gapless-5 object with tracklist', () => {
     expect(player.onstop).toHaveBeenCalledWith(TRACKS[0]);
   });
 
-  it('regression: maintains correct index after removing tracks that come after the current track', () => {
+  it('regression: maintains correct index when removing tracks that come after the currently playing track', () => {
     const testTracks = ['track1.mp3', 'track2.mp3', 'track3.mp3'];
     const player = new Gapless5({
       ...INIT_OPTIONS,
