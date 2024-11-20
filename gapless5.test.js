@@ -153,7 +153,7 @@ describe('Gapless-5 object with tracklist', () => {
     expect(player.onstop).toHaveBeenCalledWith(TRACKS[0]);
   });
 
-  it('maintains correct index after removing tracks', () => {
+  it('regression: maintains correct index after removing tracks that come after the current track', () => {
     const testTracks = ['track1.mp3', 'track2.mp3', 'track3.mp3'];
     const player = new Gapless5({
       ...INIT_OPTIONS,
@@ -174,6 +174,48 @@ describe('Gapless-5 object with tracklist', () => {
     // Check index is still 1 and track list is updated
     expect(player.getIndex()).toBe(1);
     expect(player.getTracks()).toStrictEqual(['track1.mp3', 'track2.mp3']);
+  });
+
+  it('regression: maintains correct index when removing the currently playing track', () => {
+    const testTracks = ['track1.mp3', 'track2.mp3', 'track3.mp3'];
+    const player = new Gapless5({
+      ...INIT_OPTIONS,
+      tracks: testTracks,
+    });
+
+    // Verify initial state
+    expect(player.getIndex()).toBe(0);
+    expect(player.getTracks()).toStrictEqual(testTracks);
+
+    // Move to track 1
+    player.gotoTrack(1);
+    expect(player.getIndex()).toBe(1);
+    player.play();
+
+    // Remove the currently playing track
+    player.removeTrack(1);
+
+    // Check index is still 1 and track list is updated, therefore we move to the next available track
+    expect(player.getIndex()).toBe(1);
+    expect(player.getTracks()).toStrictEqual(['track1.mp3', 'track3.mp3']);
+
+    player.play();
+
+    // Remove the currently playing track
+    player.removeTrack(1);
+
+    // Check index is still 0 and track list is updated, therefore we move to the next available track
+    expect(player.getIndex()).toBe(0);
+    expect(player.getTracks()).toStrictEqual(['track1.mp3']);
+
+    player.play();
+
+    // Remove the only remaining track
+    player.removeTrack(0);
+
+    // Check index is still 0 and track list is updated
+    expect(player.getIndex()).toBe(0);
+    expect(player.getTracks()).toStrictEqual([]);
   });
 });
 
