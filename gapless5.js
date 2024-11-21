@@ -1331,36 +1331,39 @@ function Gapless5(options = {}, deprecated = {}) { // eslint-disable-line no-unu
    * @param {number | string} pointOrPath - audio path or playlist index
    */
   this.removeTrack = (pointOrPath) => {
-    const point = this.playlist.indexFromTrack(pointOrPath);
-    if (!isValidIndex(point)) {
-      log.warn(`Cannot remove missing track: ${pointOrPath}`);
+    const index = typeof pointOrPath === 'number' ? pointOrPath : this.findTrack(pointOrPath);
+    if (!isValidIndex(index)) {
+      log.error(`Cannot remove missing track at index: ${index}`);
       return;
     }
-    const deletedPlaying = point === this.playlist.trackNumber;
 
-    const { source: curSource } = this.playlist.getSourceIndexed(point);
-    if (!curSource) {
-      return;
-    }
-    let wasPlaying = false;
+    const isCurrentTrack = index === this.playlist.trackNumber;
+    const wasPlayingCurrentTrack = isCurrentTrack && this.isPlaying();
 
-    if (curSource.state === Gapless5State.Loading) {
-      curSource.unload();
-    } else if (curSource.inPlayState(true)) {
-      wasPlaying = true;
-      curSource.stop();
+    // If it's the current track, pause playback
+    if (wasPlayingCurrentTrack) {
+      this.pause();
     }
 
-    this.playlist.remove(point);
-
-    if (deletedPlaying) {
-      this.next(); // Don't stop after a delete
-      if (wasPlaying) {
-        this.play();
-      }
+    // If removing a track before the current track, decrement trackNumber
+    if (index < this.playlist.trackNumber) {
+      this.playlist.trackNumber--;
     }
+    // If removing the current track or a track after it, but trackNumber would exceed new length
+    else if (this.playlist.trackNumber >= this.playlist.numTracks() - 1) {
+      this.playlist.trackNumber = Math.max(0, this.playlist.numTracks() - 2);
+    }
+    // Otherwise keep the same trackNumber
 
+    this.playlist.sources[index].unload();
+    this.playlist.sources.splice(index, 1);
+    this.playlist.shuffledIndices = [];
     this.uiDirty = true;
+
+    // If we were playing and there are tracks remaining, play the next available track
+    if (wasPlayingCurrentTrack && this.playlist.numTracks() > 0) {
+      this.play();
+    }
   };
 
   /**
