@@ -197,7 +197,11 @@ function Gapless5Source(parentPlayer, parentLog, inAudioPath) {
   };
 
   const onLoadedHTML5Metadata = () => {
-    endpos = audio.duration * 1000;
+    try {
+      endpos = audio.duration * 1000;
+    } catch (e) {
+      console.log(e)
+    }
   };
 
   const onLoadedHTML5Audio = () => {
@@ -516,7 +520,7 @@ function Gapless5Source(parentPlayer, parentLog, inAudioPath) {
       } else {
         audio = getHtml5Audio();
         audio.src = audioPath;
-        audio.crossOrigin = true;
+        audio.crossOrigin = "anonymous";
         audio.load();
       }
     }
