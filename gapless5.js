@@ -516,6 +516,7 @@ function Gapless5Source(parentPlayer, parentLog, inAudioPath) {
       } else {
         audio = getHtml5Audio();
         audio.src = audioPath;
+        audio.crossOrigin = true;
         audio.load();
       }
     }
